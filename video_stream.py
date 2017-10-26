@@ -26,13 +26,12 @@ while(True):
     threshold1 = cv2.getTrackbarPos('Threshold 1','Canny Edge Threshold Differences')
     threshold2 = cv2.getTrackbarPos('Threshold 2','Canny Edge Threshold Differences')
     epstemp = cv2.getTrackbarPos('Epsilon','Canny Edge Threshold Differences')
+
     ret, frame = cap.read()
 
     gray = cv2.GaussianBlur(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), (3, 3), 0)
     im2 = cv2.Canny(gray,threshold1,threshold2)
-
     im2, contours, hierarchy = cv2.findContours(im2.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
-
 
     #convexContours = [contour for contour in contours if cv2.isContourConvex(contour) and cv2.contourArea(contour) > 1]
 
@@ -40,8 +39,6 @@ while(True):
     for cnt in contours:
         epsilon = epstemp/1000*cv2.arcLength(cnt,True)
         indizes.append(cv2.approxPolyDP(cnt,epsilon,True))
-
-    #cv2.drawContours(im2, contours, -1, (0, 255, 0), 3)
 
     cont = [contour for contour in indizes if cv2.isContourConvex(contour)
             and cv2.contourArea(contour) > 400
@@ -51,7 +48,8 @@ while(True):
 
     test = cv2.drawContours(im2, cont, ALL_CONTOURS, (255,255,0), 5)
     #videostreams = np.hstack((gray,test))
-    #completewindow = np.vstack((videostreams, th1))
+    completewindow = np.vstack((videostreams, th1))
+
     cv2.imshow("Canny Edge Threshold Differences", test)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
