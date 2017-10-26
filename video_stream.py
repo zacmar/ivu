@@ -1,4 +1,8 @@
+import cv2
 import numpy as np
+
+ALL_CONTOURS = -1
+
 import cv2
 
 def th1Chng(x):
@@ -29,6 +33,7 @@ while(True):
 
     im2, contours, hierarchy = cv2.findContours(im2.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
 
+
     #convexContours = [contour for contour in contours if cv2.isContourConvex(contour) and cv2.contourArea(contour) > 1]
 
     indizes = []
@@ -38,14 +43,16 @@ while(True):
 
     #cv2.drawContours(im2, contours, -1, (0, 255, 0), 3)
 
-    cont = [contour for contour in indizes if cv2.isContourConvex(contour) and cv2.contourArea(contour) > 400]
+    cont = [contour for contour in indizes if cv2.isContourConvex(contour)
+            and cv2.contourArea(contour) > 400
+            and contour.shape[0] == 4]
 
     #im2[::] = 0
 
-    test = cv2.drawContours(im2, cont, -1, (255,255,0), 5)
-    videostreams = np.hstack((gray,test))
+    test = cv2.drawContours(im2, cont, ALL_CONTOURS, (255,255,0), 5)
+    #videostreams = np.hstack((gray,test))
     #completewindow = np.vstack((videostreams, th1))
-    cv2.imshow("Canny Edge Threshold Differences", videostreams)
+    cv2.imshow("Canny Edge Threshold Differences", test)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
