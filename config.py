@@ -1,1 +1,1 @@
-USE_HOUGH_TRAFO = False
+USE_HOUGH_TRAFO = True
