@@ -1,13 +1,13 @@
 import math
 import numpy as np
 import cv2
+import time
 
 CONTOUR_CLOSED = True
 CONTOUR_OPEN = False
 CHILD = 2
 NO_CHILDREN = -1
 ALL_CONTOURS = -1
-
 
 class GeneralContour:
     def __init__(self, contour, hierarchy, colored_frame):
@@ -23,7 +23,7 @@ class GeneralContour:
         
         self.is_candidate = self._is_candidate()
         if (self.is_candidate):
-            self._bounding_rectangle = cv2.minAreaRect(self.contour)
+            self._bounding_rectangle = cv2.minAreaRect(self.approximation)
             self._colored_frame = colored_frame
             self.color = self._compute_mean_color()
 
@@ -59,6 +59,8 @@ class GeneralContour:
         if not cv2.isContourConvex(self.approximation):
             return False
 
+
+        self._sort_contours()
         angles = angles_in_square(self.approximation)
         if not angles_pairwise_equal(angles):
             return False
@@ -85,10 +87,46 @@ class GeneralContour:
     def draw(self, image):
         cv2.drawContours(image, [self.approximation], ALL_CONTOURS, self.color, 5)
 
+    def _sort_contours(self):
+        """This method sorts the contours in the following way: leftmost point first, 
+        if the leftmost point is ambiguous, we use the upper of the two. Next one is 
+        nearest point to the right of it, again upper if ambiguous. We continue to sort
+        in a Z - shape, Meaning the points are sorted 
+        (top left, top right, bootom left, bottom right)."""
+
+        points = np.array([approx[0] for approx in self.approximation])
+
+        dt = [('col1', points.dtype),('col2', points.dtype)]
+        view = points.ravel().view(dt)
+        view.sort(order=['col1','col2'])
+
+        if points[0][0] == points[1][0]:
+                print(self.approximation)
+                print(points)
+                points[1], points[2] = points[2], points[1]
+
+        if points[0][1] == points[1][1] and points[0][0] == points[3][0] \
+        or points[0][0] == points[1][0] and points[0][1] == points[3][1]:
+                print(points)
+                input("jkhk")
+
+
+        self.approximation[0][0] = np.array(points[0])
+        self.approximation[1][0] = np.array(points[1])
+        self.approximation[2][0] = np.array(points[2])
+        self.approximation[3][0] = np.array(points[3])
 
 class Face:
     def __init__(self, facelets):
         self.facelets = facelets
+
+    def get_missing(self, colored_frame):
+        pass
+
+class RubiksCube:
+    def __init__(self):
+        pass
+
 
 def angles_in_square(square):
     angles = []
@@ -119,7 +157,7 @@ def angle_3_points(A, B, C):
     angle = math.acos(cos_angle)
     return angle
 
-def angles_pairwise_equal(angles, threshold = 0.3):
+def angles_pairwise_equal(angles, threshold = 0.2):
     if angles[0] > angles[2] + threshold:
         print(False)
         return False
