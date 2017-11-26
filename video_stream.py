@@ -4,6 +4,13 @@ import cv2
 import numpy as np
 
 cap = cv2.VideoCapture(0)
+FILE_OUTPUT = "Composed_1.avi"
+VIDIN_OUTPUT = "VIDIN_1.avi"
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+width = int(cap.get(3))   # float
+height = int(cap.get(4))
+out1 = cv2.VideoWriter(FILE_OUTPUT,fourcc, 30.0, (int(width),int(height)))
+out3 = cv2.VideoWriter(VIDIN_OUTPUT,fourcc, 30.0, (int(width),int(height)))
 
 def assignFaceletToFace(facelet, cube):
     # no facelets in any of the faces, faces is empty
@@ -27,7 +34,7 @@ def inList(array, list_):
 
 while(True):
     ret, frame = cap.read()
-
+    out3.write(frame)
     threshold1 = 50
     threshold2 = 20
     gray = cv2.bilateralFilter(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY),9, 3,3)
@@ -38,7 +45,7 @@ while(True):
         epsilon = 0.06*cv2.arcLength(cnt,True)
         indizes.append(cv2.approxPolyDP(cnt,epsilon,True))
     cont = [contour for contour in indizes if cv2.isContourConvex(contour) 
-                                           and cv2.contourArea(contour) > 400
+                                           and cv2.contourArea(contour, True) > 400
                                            and contour.shape[0] == 4]
     boundingRects = [cv2.minAreaRect(contour) for contour in cont]
     im2[::] = 0
@@ -57,6 +64,7 @@ while(True):
                 cv2.putText(im2, str(ind), (contour[0][0][0], contour[0][0][1]), cv2.FONT_HERSHEY_PLAIN, 4,(255,255,255),2,cv2.LINE_AA)
                 print(contour[0][0])
         cv2.drawContours(im2, [contour], ALL_CONTOURS, means[index], 5)
+    out1.write(im2)
     cv2.imshow('frame', im2)
     cv2.imshow('grey', gray)
     if cv2.waitKey(1) & 0xFF == ord('q'):
