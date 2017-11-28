@@ -14,12 +14,12 @@ make assumptions on the relation between each facelet to get the complete face
 or cube.
 
 
-We have ran already into the following problems, the first one is to
+We have run into the following problems already, the first one is to
 determine the right contours due to the nature of the real world no line
-is an exactly straight line without possible interruptions, and no edge is 
+is an exactly straight line without any interruption, and no edge is 
 really sharp therefore we had to use filters and parameters to be able to
 ignore certain irregularities. We had also to define which contours are relevant
-and set up a environment with a diffuse light to avoid reflections.
+and set up an environment with a diffuse light to avoid reflections.
 
 Grouping facelets is an issue which we are trying to solve, because
 some facelets do not get recognized and therefore we have to make assumptions
