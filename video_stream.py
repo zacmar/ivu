@@ -6,6 +6,7 @@ import numpy as np
 import collections
 import config, trackbars
 from contour import GeneralContour
+from colorSetup import setupColorsFromUserInput
 
 def houghLineTransform(input_image, output_image):
     lines = cv2.HoughLines(input_image.copy(), 1, np.pi / 180, 150)
@@ -23,15 +24,23 @@ def houghLineTransform(input_image, output_image):
 
             cv2.line(output_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-cap = cv2.VideoCapture(1)
+
+cap = cv2.VideoCapture(0)
 ret, frame = cap.read()
-mask = cv2.cvtColor(frame.copy(), cv2.COLOR_RGB2GRAY)
+
+frame_new = frame.copy()
+colors = setupColorsFromUserInput()
+
+for index, color in enumerate(colors):
+    cv2.rectangle(frame_new, (100*index, 0), (100*index + 100, 400), color, -1)
+
+cv2.imwrite('colors.jpg', frame_new)
+
 
 trackbars.setup()
-# describes a deque holding all the contours and respective centroids
-# for the last 5 frames
 
-while(True):
+
+while(False):
     ret, frame = cap.read()
 
     threshold1, threshold2, epsilon, sigma_color, sigma_space = trackbars.getUpdate()
