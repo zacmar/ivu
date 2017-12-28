@@ -71,8 +71,6 @@ class GeneralContour:
         if abs(cv2.contourArea(self.contour)) < 400:
             return False
 
-        print(abs(cv2.contourArea(self.contour)))
-
         if abs(cv2.contourArea(self.contour)) > 20000:
                 return False
 
@@ -101,15 +99,7 @@ class GeneralContour:
         view.sort(order=['col1','col2'])
 
         if points[0][0] == points[1][0]:
-                print(self.approximation)
-                print(points)
                 points[1], points[2] = points[2], points[1]
-
-        if points[0][1] == points[1][1] and points[0][0] == points[3][0] \
-        or points[0][0] == points[1][0] and points[0][1] == points[3][1]:
-                print(points)
-                input("jkhk")
-
 
         self.approximation[0][0] = np.array(points[0])
         self.approximation[1][0] = np.array(points[1])
@@ -139,11 +129,8 @@ def angles_in_square(square):
 def angle_3_points(A, B, C):
     """ returns angle at B for the triangle A, B, C """
     a = cv2.norm(C, B)
-    print(a)
     b = cv2.norm(A, C)
-    print(b)
     c = cv2.norm(A, B)
-    print(c)
     try:
         cos_angle = (math.pow(a, 2) + math.pow(b, 2) - math.pow(c, 2)) / (2 * a * b)
     except ZeroDivisionError as e:
@@ -159,7 +146,6 @@ def angle_3_points(A, B, C):
 
 def angles_pairwise_equal(angles, threshold = 0.2):
     if angles[0] > angles[2] + threshold:
-        print(False)
         return False
     if angles[0] < angles[2] - threshold:
         return False
@@ -167,5 +153,4 @@ def angles_pairwise_equal(angles, threshold = 0.2):
         return False
     if angles[1] < angles[3] - threshold:
         return False
-    print("True")
     return True

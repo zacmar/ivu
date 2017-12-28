@@ -1,5 +1,6 @@
 ALL_CONTOURS = -1
 OPTIMAL_DISTANCE = -1
+COLOR_THRESHOLD = 30
 
 import cv2
 import numpy as np
@@ -24,23 +25,34 @@ def houghLineTransform(input_image, output_image):
 
             cv2.line(output_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
+def assignPixelToColor(pixel_color, colorset):
+    for color in colorset:
+        if np.allclose(pixel_color, color, atol=COLOR_THRESHOLD):
+            return color
+    return [0, 0, 0]
+
+def SegmentImageByColor(image, colorset):
+    for index in np.ndindex(image.shape[:2]):
+        image[index] = assignPixelToColor(image[index], colorset)
+
+def SegmentImageByColorHsv(image, colorset):
+    image_black = np.zeros_like(image)
+    for color in colorset:
+        mask = cv2.inRange(image, tuple(channel - COLOR_THRESHOLD for channel in color), tuple(channel + COLOR_THRESHOLD for channel in color))
+        kernel = np.ones((10, 10),np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        locations = np.where(mask != 0)
+        image_black[locations[0], locations[1]] = color
+    return image_black
+
 
 cap = cv2.VideoCapture(0)
-ret, frame = cap.read()
 
-frame_new = frame.copy()
-colors = setupColorsFromUserInput()
-
-for index, color in enumerate(colors):
-    cv2.rectangle(frame_new, (100*index, 0), (100*index + 100, 400), color, -1)
-
-cv2.imwrite('colors.jpg', frame_new)
-
+colors = setupColorsFromUserInput(cap)
 
 trackbars.setup()
 
-
-while(False):
+while(True):
     ret, frame = cap.read()
 
     threshold1, threshold2, epsilon, sigma_color, sigma_space = trackbars.getUpdate()
@@ -62,6 +74,8 @@ while(False):
         if contour.is_candidate:
             contour.draw(frame_composed)
 
+    frame = SegmentImageByColorHsv(frame, colors)
+
     template = cv2.imread('frame_edges.jpg',0)
     w, h = frame_edges.shape[::-1]
      
@@ -76,7 +90,7 @@ while(False):
 
     cv2.imshow('res.png',frame_new)
 
-    cv2.imshow('Canny Edge Threshold Differences', frame_composed)
+    cv2.imshow('Canny Edge Threshold Differences', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
