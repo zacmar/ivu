@@ -18,8 +18,8 @@ class GeneralContour:
         self.original = original 
         # candidates, at this point have to have the following characteristics:
         # * consist of 4 points in the polygon approximation -----> covered by _is_square
-        # * have pairwise similar angles ---------------------´
-        # * has to be convex --------------------------------´
+        # * have pairwise similar angles ---------------------
+        # * has to be convex --------------------------------
         # * do not have any child contours
         # * cover a reasonable size of the input image
         
@@ -129,15 +129,15 @@ class RubiksCube:
     def __init__(self, solution):
         self.initialized = False
         self.facletColors = dict()
-        self.colorset = [(44, 74, 144),
-					     (20, 29, 14),
-					     (62, 105, 14),
-					     (89, 150, 148),
-                         (115, 75, 26),
-					     (40, 39, 116)]
+        self.colorset = [(58.13327120223672, 51.39608574091333, 254.93196644920783),
+                         (0.0, 1.7061923583662715, 2.2674571805006587),
+                         (0.09493087557603687, 247.2709677419355, 255.0),
+                         (168.10998877665546, 71.6969696969697, 0.0),
+                         (8.152564102564103, 153.74871794871794, 255.0),
+                         (16.9991341991342, 149.7116883116883, 0.0)]
                          
         self.createCube()
-        draworder = [4,0,1,2,5,8,7,6,3]
+        self.draworder = [4,0,3,6,7,8,5,2,1]
         emptyColor = [(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255)]
 
         for i in range(6):
@@ -176,10 +176,10 @@ class RubiksCube:
     def createCube(self):
         self.faces = dict()
         for i in range(4):
-            self.facelets = self.createFace() + np.array([i*100,200])
+            self.facelets = self.createFace() + np.array([i*100,150])
             self.faces[i] = self.facelets
-        self.faces[4] = self.createFace() + np.array([300,100])    
-        self.faces[5] = self.createFace() + np.array([300,300]) 
+        self.faces[4] = self.createFace() + np.array([300,50])    
+        self.faces[5] = self.createFace() + np.array([300,250]) 
         
     def showFaces(self,image):
         for faceNr in range(6):
@@ -218,10 +218,21 @@ class RubiksCube:
         alreadyAssigned.append(meNr)
         distances, sortedDist = self.retEachDistances(meLocation, centroids)
         
-        for el in range(1,9):
-            index = distances.index(sortedDist[el])
-            if not index in alreadyAssigned:
-                break
+        if(len(alreadyAssigned) != 2):
+            for el in range(1,9):
+                index = distances.index(sortedDist[el])
+                if not index in alreadyAssigned:
+                    break
+        else:
+            opt1 = centroids[distances.index(sortedDist[1])]
+            opt2 = centroids[distances.index(sortedDist[2])]
+            dir1 = opt1-meLocation
+            dir2 = opt2-meLocation
+            if(dir1[0]>dir2[0]):
+                index=distances.index(sortedDist[1])
+            else:
+                index=distances.index(sortedDist[2])
+
         return self.whoIsMyNeighbour(centroids[index],index,centroids,alreadyAssigned)
         
 
@@ -242,7 +253,7 @@ class RubiksCube:
             else:
                 color = (0, 255, 0)
                 
-            cv2.putText(frame, str("{:3.2f}".format(angle)), (cont.approximation[1][0][0], cont.approximation[1][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,color,1,cv2.LINE_AA)
+            #cv2.putText(frame, str("{:3.2f}".format(angle)), (cont.approximation[1][0][0], cont.approximation[1][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,color,1,cv2.LINE_AA)
             #cv2.putText(frame, str("{:3.2f}".format(180*cont.angles[3]/math.pi)), (cont.approximation[0][0][0], cont.approximation[0][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,(0,255,0),2,cv2.LINE_AA)
 
         if len(indices) == 9: #here we found 9 facelets which appearently belong to the same face
@@ -252,14 +263,15 @@ class RubiksCube:
             conts = [conts[ind] for ind in indices]
 
             centroids = np.array([contour.centroid for contour in conts])
-            print(centroids)
-            print("-"*60)
-            print(centroids[0])
-            quit()
+
+            for i in range(9):
+                cent = centroids[i]
+                cv2.putText(frame, str(i), (int(cent[0]),int(cent[1])), cv2.FONT_HERSHEY_PLAIN, 5,(0,0,255),2,cv2.LINE_AA)
+
             distances = []
             for cent1 in centroids:
                 distances = self.calc_dist(cent1, centroids, distances)
-
+            cv2.imshow("HI", frame)
             middle = distances.index(min(distances)) #here we search for the middle centroid -> the one with the least distance to all the others
             distances = []
             distances = self.calc_dist(centroids[middle], centroids, distances)
@@ -280,7 +292,7 @@ class RubiksCube:
                         print(list_)
                         ok = list_[ind]
                         ok = conts[list_[ind]].color
-                        self.facletColors[faceNr][ind] = conts[list_[ind]].color
+                        self.facletColors[faceNr][self.draworder[ind]] = conts[list_[ind]].color
                     return frame, conts
                 
         return frame, conts

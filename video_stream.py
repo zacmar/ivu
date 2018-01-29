@@ -24,7 +24,7 @@ def houghLineTransform(input_image, output_image):
             cv2.line(output_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
             
-cap = cv2.VideoCapture(0) #"D:\\Dropbox\\Uni\\Master\\1. Semester\\IVU\\Final2.mp4")
+cap = cv2.VideoCapture("./Finalvideo.mp4") #"D:\\Dropbox\\Uni\\Master\\1. Semester\\IVU\\Final2.mp4")
 ret, frame = cap.read()
 mask = cv2.cvtColor(frame.copy(), cv2.COLOR_RGB2GRAY)
 
@@ -41,9 +41,6 @@ k = 0
 
 while(True):
     ret, frame = cap.read()
-    k+=1
-    if k%2 == 0:
-        continue
         
     threshold1, threshold2, epsilon, sigma_color, sigma_space = trackbars.getUpdate()
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
