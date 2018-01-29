@@ -185,9 +185,17 @@ class RubiksCube:
                 
             cv2.putText(frame, str("{:3.2f}".format(angle)), (cont.approximation[1][0][0], cont.approximation[1][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,color,1,cv2.LINE_AA)
             #cv2.putText(frame, str("{:3.2f}".format(180*cont.angles[3]/math.pi)), (cont.approximation[0][0][0], cont.approximation[0][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,(0,255,0),2,cv2.LINE_AA)
+        all_centroids = []    
+        for cont in conts:
+            all_centroids.append(cont.centroid)
+        print ("_"*70)
+        print (all_centroids)
+        print ("_"*70)
         return frame, conts
+
     def ContToFacelets(self, frame, conts):
         pass
+        
 def angles_in_square(square):
     angles = []
     angles.append(angle_3_points(square[3][0], square[0][0], square[1][0]))
