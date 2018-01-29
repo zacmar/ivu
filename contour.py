@@ -3,23 +3,26 @@ import numpy as np
 import cv2
 import time, copy
 
+
 CONTOUR_CLOSED = True
 CONTOUR_OPEN = False
 CHILD = 2
 NO_CHILDREN = -1
 ALL_CONTOURS = -1
 COLOR_THRESHOLD = 40
+MIDDLE_FACELET = 4
+
 
 class GeneralContour:
     def __init__(self, contour, hierarchy, colored_frame, original, epsilon):
         self.epsilon = epsilon
         self.contour = contour
         self.hierarchy = hierarchy
-        self.original = original 
+        self.original = original
         # candidates, at this point have to have the following characteristics:
         # * consist of 4 points in the polygon approximation -----> covered by _is_square
-        # * have pairwise similar angles ---------------------
-        # * has to be convex --------------------------------
+        # * have pairwise similar angles ---------------------´
+        # * has to be convex --------------------------------´
         # * do not have any child contours
         # * cover a reasonable size of the input image
         
@@ -46,8 +49,6 @@ class GeneralContour:
         if not self._size_ok():
             return False
         
-
-
         # Center of contour calculation by moments
         moments = cv2.moments(self.contour)
         self.centroid = [moments["m10"] // moments["m00"],
@@ -64,7 +65,6 @@ class GeneralContour:
         if not cv2.isContourConvex(self.approximation):
             return False
 
-
         self._sort_contours()
         self.angles = angles_in_square(self.approximation)
         #if not angles_pairwise_equal(self.angles):
@@ -75,11 +75,8 @@ class GeneralContour:
     def _size_ok(self):
         if abs(cv2.contourArea(self.contour, True)) < 500:
             return False
-
-        #print(abs(cv2.contourArea(self.contour)))
-
         if abs(cv2.contourArea(self.contour, True)) > 5000:
-                return False
+            return False
         return True
 
     def _has_children(self):
@@ -109,23 +106,14 @@ class GeneralContour:
         or points[0][0] == points[1][0] and points[0][1] == points[3][1]:
                 input("jkhk")
 
-
         self.approximation[0][0] = np.array(points[0])
         self.approximation[1][0] = np.array(points[1])
         self.approximation[2][0] = np.array(points[2])
         self.approximation[3][0] = np.array(points[3])
         self.area = cv2.contourArea(self.approximation)
-        #print("{}\n{}\n{}".format("*"*60, self.approximation, "*"*60))
 
-class Face:
-    def __init__(self):
-        pass
-    def get_missing(self, colored_frame):
-        pass
 
 class RubiksCube:
-
-
     def __init__(self, solution):
         self.initialized = False
         self.facletColors = dict()
@@ -138,27 +126,15 @@ class RubiksCube:
                          
         self.createCube()
         self.draworder = [4,0,3,6,7,8,5,2,1]
-        emptyColor = [(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255),(255,255,255)]
+        emptyColor = [(255,255,255),(255,255,255),(255,255,255),
+                      (255,255,255),(255,255,255),(255,255,255),
+                      (255,255,255),(255,255,255),(255,255,255)]
 
         for i in range(6):
-            self.safeColor(i,copy.copy(emptyColor))
+            self.safeColor(i, copy.copy(emptyColor))
     
         self.showFaces(solution)
         self.initialized = True
-        
-    def assignFaceletToFace(facelet, cube):
-        # no facelets in any of the faces, faces is empty
-        currentVec1 = facelet[0] - facelet[1]
-        currentVec2 = facelet[1] - facelet[2]
-        for face in cube:
-            compareVec1 = face[0][0] - face[0][1]
-            compareVec2 = face[0][1] - face[0][2]
-            if np.allclose(currentVec1, compareVec1, 2) and np.allclose(currentVec2, compareVec2, 2):
-                face.append(facelet)
-                break
-        else:
-            cube.append([facelet])
-
 
     def safeColor(self, faceNr, colors):
         self.facletColors[faceNr] = colors
@@ -182,14 +158,9 @@ class RubiksCube:
         self.faces[5] = self.createFace() + np.array([300,250]) 
         
     def showFaces(self,image):
-        for faceNr in range(6):
-            i = 0
-            for facelet in self.faces[faceNr]:
-                if not self.initialized:
-                    cv2.drawContours(image, [facelet], 0, (255, 255, 255), 3)
-                else:
-                    cv2.drawContours(image, [facelet], 0, self.facletColors[faceNr][i], 3)
-                i+=1
+        for id1, face in self.facletColors.items():
+            for id2, facelet in enumerate(self.faces[id1]):
+                    cv2.drawContours(image, [facelet], 0, face[id2], 3)
         return image
     
     def assignPixelToColor(self, pixel_color):
@@ -201,12 +172,11 @@ class RubiksCube:
                 min_index = index
         return self.colorset[min_index]
         
-    def calc_dist(self, cent, centroids, distances):
+    def calc_dist(self, cent, centroids):
         dist = 0
         for tempCent in centroids:
             dist += np.linalg.norm(cent-tempCent)
-        distances.append(dist)
-        return distances
+        return dist
         
     def retEachDistances(self, cent, centroids):
         distances = [np.linalg.norm(cent-tempCent) for tempCent in centroids]
@@ -226,80 +196,57 @@ class RubiksCube:
         else:
             opt1 = centroids[distances.index(sortedDist[1])]
             opt2 = centroids[distances.index(sortedDist[2])]
-            dir1 = opt1-meLocation
-            dir2 = opt2-meLocation
-            if(dir1[0]>dir2[0]):
-                index=distances.index(sortedDist[1])
+            dir1 = opt1 - meLocation
+            dir2 = opt2 - meLocation
+            if dir1[0] > dir2[0]:
+                index = distances.index(sortedDist[1])
             else:
-                index=distances.index(sortedDist[2])
+                index = distances.index(sortedDist[2])
 
         return self.whoIsMyNeighbour(centroids[index],index,centroids,alreadyAssigned)
         
-
-
     def asFrCo(self, frame, conts):
         if len(conts) == 0:
-            return [], []
-        angle1 = 180*conts[0].angles[0]/math.pi
-        treshhold = angle1*0.15
-        upth = angle1 + treshhold
-        loth = angle1 - treshhold
-        indices = []
-        for index, cont in enumerate(conts):
-            angle = 180*cont.angles[0]/math.pi
-            if angle > loth and angle < upth:
-            	color = (255, 0, 0)
-            	indices.append(index)
-            else:
-                color = (0, 255, 0)
-                
-            #cv2.putText(frame, str("{:3.2f}".format(angle)), (cont.approximation[1][0][0], cont.approximation[1][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,color,1,cv2.LINE_AA)
-            #cv2.putText(frame, str("{:3.2f}".format(180*cont.angles[3]/math.pi)), (cont.approximation[0][0][0], cont.approximation[0][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,(0,255,0),2,cv2.LINE_AA)
+            return conts
+        angle_ref = conts[0].angles[0]
+        treshhold = angle_ref * 0.15
+        upth = angle_ref + treshhold
+        loth = angle_ref - treshhold
+        conts = [contour for contour in conts
+                if contour.angles[0] > loth and contour.angles[0] < upth]
 
-        if len(indices) == 9: #here we found 9 facelets which appearently belong to the same face
-            for index in indices:
-                conts[index].color = self.assignPixelToColor((conts[index].color))
-                cv2.drawContours(frame, [conts[index].contour], ALL_CONTOURS, conts[index].color, -1)
-            conts = [conts[ind] for ind in indices]
+        if len(conts) == 9: #here we found 9 facelets which appearently belong to the same face
+
+            for contour in conts:
+                contour.color = self.assignPixelToColor((contour.color))
+                contour.draw(frame)
 
             centroids = np.array([contour.centroid for contour in conts])
+            for index, centroid in enumerate(centroids):
+                cv2.putText(frame, str(index), (int(centroid[0]), int(centroid[1])), cv2.FONT_HERSHEY_PLAIN, 5,(0,0,255),2,cv2.LINE_AA)
 
-            for i in range(9):
-                cent = centroids[i]
-                cv2.putText(frame, str(i), (int(cent[0]),int(cent[1])), cv2.FONT_HERSHEY_PLAIN, 5,(0,0,255),2,cv2.LINE_AA)
-
-            distances = []
-            for cent1 in centroids:
-                distances = self.calc_dist(cent1, centroids, distances)
-            cv2.imshow("HI", frame)
+            distances = [self.calc_dist(centroid, centroids)
+                         for centroid in centroids]
             middle = distances.index(min(distances)) #here we search for the middle centroid -> the one with the least distance to all the others
             distances = []
-            distances = self.calc_dist(centroids[middle], centroids, distances)
+            distances = [self.calc_dist(centroids[middle], centroids)]
             meNr = distances.index(max(distances))
+
             meLocation = centroids[meNr]
             alreadyAssigned = [middle]
             list_ = self.whoIsMyNeighbour(meLocation, meNr, centroids, alreadyAssigned)
 
             #the face has been scanned already, if the color of the middle facelet exists already
             middle_facelet = conts[list_[0]].color
-            for faceNr in range(6):
-                if self.facletColors[faceNr][4] == middle_facelet:
-                    print("Already assigned")
-                    return frame, conts
-            for faceNr in range(6):
-                if self.facletColors[faceNr][4] == (255,255,255):
+            for _, face in self.facletColors.items():
+                if face[MIDDLE_FACELET] == middle_facelet:
+                    break
+                elif face[MIDDLE_FACELET] == (255,255,255):
                     for ind in range(len(list_)):
-                        print(list_)
-                        ok = list_[ind]
-                        ok = conts[list_[ind]].color
-                        self.facletColors[faceNr][self.draworder[ind]] = conts[list_[ind]].color
-                    return frame, conts
-                
-        return frame, conts
-
-
-    def ContToFacelets(self, frame, conts):
-        pass
+                        face[self.draworder[ind]] = conts[list_[ind]].color
+                    break
+        
+        return conts
 
 
 def angles_in_square(square):
@@ -310,14 +257,12 @@ def angles_in_square(square):
     angles.append(angle_3_points(square[2][0], square[3][0], square[0][0]))
     return angles
 
+
 def angle_3_points(A, B, C):
     """ returns angle at B for the triangle A, B, C """
     a = cv2.norm(C, B)
-    #print(a)
     b = cv2.norm(A, C)
-    #print(b)
     c = cv2.norm(A, B)
-    #print(c)
     try:
         cos_angle = (math.pow(a, 2) + math.pow(b, 2) - math.pow(c, 2)) / (2 * a * b)
     except ZeroDivisionError as e:
@@ -331,9 +276,9 @@ def angle_3_points(A, B, C):
     angle = math.acos(cos_angle)
     return angle
 
+
 def angles_pairwise_equal(angles, threshold = 1):
     if angles[0] > angles[2] + threshold:
-        #print(False)
         return False
     if angles[0] < angles[2] - threshold:
         return False
@@ -341,5 +286,4 @@ def angles_pairwise_equal(angles, threshold = 1):
         return False
     if angles[1] < angles[3] - threshold:
         return False
-    #print("True")
     return True
