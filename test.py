@@ -12,9 +12,7 @@ def calc_dist(cent, centroids, distances):
     return distances
     
 def retEachDistances(cent, centroids):
-    distances = []
-    for tempCent in centroids:
-        distances.append(np.linalg.norm(cent-tempCent))
+    distances = [np.linalg.norm(cent-tempCent) for tempCent in centroids]
     return distances, sorted(distances)
     
 def whoIsMyNeighbour(meLocation, meNr, centroids, alreadyAssigned):
@@ -47,13 +45,6 @@ meNr = distances.index(max(distances))
 meLocation = centroids[meNr]
 alreadyAssigned = [middle]
 list = whoIsMyNeighbour(meLocation, meNr, centroids, alreadyAssigned)
-
-
-
-
-
-
-
 
 
 

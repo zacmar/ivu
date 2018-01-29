@@ -1,7 +1,7 @@
 ALL_CONTOURS = -1
 OPTIMAL_DISTANCE = -1
 
-import cv2
+import cv2, copy
 import numpy as np
 import collections
 import config, trackbars
@@ -22,8 +22,9 @@ def houghLineTransform(input_image, output_image):
             y2 = int(y0 - 1000*(a))
 
             cv2.line(output_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
-colors = [(44.193627450980394, 74.07271241830065, 144.99264705882354), (20.247441860465116, 29.593488372093024, 14.581395348837209), (62.07008760951189, 105.57363370880267, 14.728410513141426), (89.2509671179884, 150.35444874274663, 148.47678916827854), (40.14426523297491, 39.47670250896057, 116.09498207885305), (115.79299645390071, 75.78147163120568, 26.62322695035461)]
-cap = cv2.VideoCapture(1) #"D:\\Dropbox\\Uni\\Master\\1. Semester\\IVU\\Final2.mp4")
+
+            
+cap = cv2.VideoCapture(0) #"D:\\Dropbox\\Uni\\Master\\1. Semester\\IVU\\Final2.mp4")
 ret, frame = cap.read()
 mask = cv2.cvtColor(frame.copy(), cv2.COLOR_RGB2GRAY)
 
@@ -31,16 +32,11 @@ trackbars.setup()
 # describes a deque holding all the contours and respective centroids
 # for the last 5 frames
 
-solution = np.zeros((480,640,3))
-cube = RubiksCube()
+solution = np.zeros_like(frame)
+cube = RubiksCube(solution)
 cube.createCube()
 
-emptyColor = [(255,0,0),(255,255,255),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0)]
 
-for i in range(6):
-    cube.safeColor(i,emptyColor)
-    
-cube.showFaces(solution)
 k = 0
 
 while(True):
@@ -60,7 +56,8 @@ while(True):
     # computing the contours and centroids for current frame
     frame_edges, contours, hierarchies = cv2.findContours(frame_edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     #frame_edges[::] = 0
-    general_contours = [GeneralContour(contour, hierarchy, frame, True) for contour, hierarchy in zip(contours, hierarchies[0])]
+    
+    general_contours = [GeneralContour(contour, hierarchy, frame, True, epsilon/1000) for contour, hierarchy in zip(contours, hierarchies[0])]
 
     frame_composed = cv2.cvtColor(frame_edges, cv2.COLOR_GRAY2RGB)
     # frame_composed[::] = 0
@@ -76,10 +73,10 @@ while(True):
             if found == 0:
                 filtered_conts.append(contour)
     
-    temp_frame_composed = frame_composed     
+    temp_frame_composed = frame_composed
     frame_composed, filtered_conts = cube.asFrCo(frame_composed, filtered_conts)
     
-    if(len(frame_composed)== 0):
+    if(len(frame_composed) == 0):
         frame_composed = temp_frame_composed
         
     for contour in filtered_conts:
@@ -102,6 +99,8 @@ while(True):
     #cv2.imshow('res.png',frame_new)
 
     cv2.imshow('Canny Edge Threshold Differences', frame_composed)
+    solution[::] = 0
+    solution = cube.showFaces(solution)
     cv2.imshow('Solution', solution)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
