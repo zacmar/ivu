@@ -23,7 +23,7 @@ def houghLineTransform(input_image, output_image):
 
             cv2.line(output_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
 colors = [(44.193627450980394, 74.07271241830065, 144.99264705882354), (20.247441860465116, 29.593488372093024, 14.581395348837209), (62.07008760951189, 105.57363370880267, 14.728410513141426), (89.2509671179884, 150.35444874274663, 148.47678916827854), (40.14426523297491, 39.47670250896057, 116.09498207885305), (115.79299645390071, 75.78147163120568, 26.62322695035461)]
-cap = cv2.VideoCapture(0) #"D:\\Dropbox\\Uni\\Master\\1. Semester\\IVU\\Final2.mp4")
+cap = cv2.VideoCapture(1) #"D:\\Dropbox\\Uni\\Master\\1. Semester\\IVU\\Final2.mp4")
 ret, frame = cap.read()
 mask = cv2.cvtColor(frame.copy(), cv2.COLOR_RGB2GRAY)
 
