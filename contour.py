@@ -8,6 +8,7 @@ CONTOUR_OPEN = False
 CHILD = 2
 NO_CHILDREN = -1
 ALL_CONTOURS = -1
+COLOR_THRESHOLD = 40
 
 class GeneralContour:
     def __init__(self, contour, hierarchy, colored_frame, original):
@@ -121,9 +122,17 @@ class Face:
         pass
 
 class RubiksCube:
+
+
     def __init__(self):
         self.facletColors = dict()
-        pass
+        self.colorset = [(44.193627450980394, 74.07271241830065, 144.99264705882354), 
+					 (20.247441860465116, 29.593488372093024, 14.581395348837209), 
+					 (62.07008760951189, 105.57363370880267, 14.728410513141426), 
+					 (89.2509671179884, 150.35444874274663, 148.47678916827854), 
+					 (40.14426523297491, 39.47670250896057, 116.09498207885305), 
+					 (115.79299645390071, 75.78147163120568, 26.62322695035461)]
+
         
     def assignFaceletToFace(facelet, cube):
         # no facelets in any of the faces, faces is empty
@@ -137,6 +146,8 @@ class RubiksCube:
                 break
         else:
             cube.append([facelet])
+
+
     def safeColor(self, faceNr, colors):
         self.facletColors[faceNr] = colors
 
@@ -166,36 +177,44 @@ class RubiksCube:
                 cv2.drawContours(image, [facelet], ALL_CONTOURS, self.facletColors[faceNr][i],1)#(255,0,0)
                 i+=1
     
+    def assignPixelToColor(self, pixel_color):
+        for color in self.colorset:
+            print(pixel_color[:3])
+            if np.allclose(pixel_color[:3], color, atol=COLOR_THRESHOLD):
+                print("true")
+                return color
+        return [0, 0, 0]
+
     def asFrCo(self, frame, conts):
-        tempcont1 = []
-        tempcont2 = []
         if len(conts) == 0:
             return [], []
         angle1 = 180*conts[0].angles[0]/math.pi
         treshhold = angle1*0.15
         upth = angle1 + treshhold
         loth = angle1 - treshhold
-        for cont in conts:
+        indices = []
+        for index, cont in enumerate(conts):
             angle = 180*cont.angles[0]/math.pi
-            
-            if angle > loth and angle < upth: 
-                color = (255,0,0)
+            if angle > loth and angle < upth:
+            	color = (255, 0, 0)
+            	indices.append(index)
             else:
                 color = (0, 255, 0)
                 
             cv2.putText(frame, str("{:3.2f}".format(angle)), (cont.approximation[1][0][0], cont.approximation[1][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,color,1,cv2.LINE_AA)
             #cv2.putText(frame, str("{:3.2f}".format(180*cont.angles[3]/math.pi)), (cont.approximation[0][0][0], cont.approximation[0][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,(0,255,0),2,cv2.LINE_AA)
-        all_centroids = []    
-        for cont in conts:
-            all_centroids.append(cont.centroid)
-        print ("_"*70)
-        print (all_centroids)
-        print ("_"*70)
+        print(conts[0].color)
+        if len(indices) == 9: #here we found 9 facelets which appearently belong to the same face
+        	for index in indices:
+        		final_color = self.assignPixelToColor((conts[index].color))
+        		cv2.drawContours(frame, [conts[index].contour], ALL_CONTOURS, final_color, -1)
         return frame, conts
+
 
     def ContToFacelets(self, frame, conts):
         pass
-        
+
+
 def angles_in_square(square):
     angles = []
     angles.append(angle_3_points(square[3][0], square[0][0], square[1][0]))
