@@ -124,6 +124,19 @@ class RubiksCube:
     def __init__(self):
         self.facletColors = dict()
         pass
+        
+    def assignFaceletToFace(facelet, cube):
+        # no facelets in any of the faces, faces is empty
+        currentVec1 = facelet[0] - facelet[1]
+        currentVec2 = facelet[1] - facelet[2]
+        for face in cube:
+            compareVec1 = face[0][0] - face[0][1]
+            compareVec2 = face[0][1] - face[0][2]
+            if np.allclose(currentVec1, compareVec1, 2) and np.allclose(currentVec2, compareVec2, 2):
+                face.append(facelet)
+                break
+        else:
+            cube.append([facelet])
     def safeColor(self, faceNr, colors):
         self.facletColors[faceNr] = colors
 
@@ -149,6 +162,7 @@ class RubiksCube:
         for faceNr in range(6):
             i = 0
             for facelet in self.faces[faceNr]:
+                print(self.facletColors[faceNr][i])
                 cv2.drawContours(image, [facelet], ALL_CONTOURS, self.facletColors[faceNr][i],1)#(255,0,0)
                 i+=1
     
@@ -173,8 +187,7 @@ class RubiksCube:
             #cv2.putText(frame, str("{:3.2f}".format(180*cont.angles[3]/math.pi)), (cont.approximation[0][0][0], cont.approximation[0][0][1]), cv2.FONT_HERSHEY_PLAIN, 1,(0,255,0),2,cv2.LINE_AA)
         return frame, conts
     def ContToFacelets(self, frame, conts):
-        for cont in conts:
-           print(cont.centroid)
+        pass
 def angles_in_square(square):
     angles = []
     angles.append(angle_3_points(square[3][0], square[0][0], square[1][0]))
