@@ -1,2 +1,0 @@
-region based segmentation
-(dialiation)
